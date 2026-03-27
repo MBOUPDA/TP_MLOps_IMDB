@@ -87,19 +87,36 @@ jobs:
         cp -r src models requirements.txt app.py deploy_folder/
         cd deploy_folder
         
-        # 2. Initialisation d'un Git propre forcé sur la branche 'main'
+        # 2. ✅ CRÉATION DU README.MD (MÉTADONNÉES OBLIGATOIRES POUR HF)
+        cat <<EOF > README.md
+        ---
+        title: IMDB Sentiment Analysis
+        emoji: 🎬
+        colorFrom: blue
+        colorTo: indigo
+        sdk: gradio
+        sdk_version: "4.19.2"
+        app_file: app.py
+        pinned: false
+        ---
+        
+        # MLOps Project - IMDB Sentiment Analysis
+        Déployé via GitHub Actions par l'équipe (Joyce, Ornella, Hamad).
+        EOF
+        
+        # 3. Initialisation d'un Git propre sur la branche 'main'
         git init -b main
         git config user.email "bot@mlops.com"
         git config user.name "MLOps Bot"
         
-        # 3. Configuration LFS immédiate pour les fichiers .keras
+        # 4. Configuration LFS immédiate pour les modèles
         git lfs install
         git lfs track "models/*.keras"
         git add .gitattributes
         git add .
         
-        # 4. Création du commit de production propre (sans historique pollué)
-        git commit -m "Deployment: Clean MLOps production build"
+        # 5. Commit de production propre (sans historique pollué)
+        git commit -m "Deployment: Clean MLOps production build with metadata"
         
-        # 5. Push forcé vers Hugging Face (écrase l'historique distant pour résoudre le bug LFS)
+        # 6. Push forcé vers le Space
         git push -f https://user:$HF_TOKEN@huggingface.co/spaces/Joycemboupda/IMDB_Sentiment_Analysis main
