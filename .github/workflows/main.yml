@@ -1,0 +1,55 @@
+name: MLOps Pipeline IMDB
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  test_and_report:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        lfs: true
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run Model Tests
+      id: run_tests
+      run: |
+        # On lance le test qui est maintenant dans /tests
+        pytest tests/test_model.py
+      continue-on-error: true
+
+    - name: Send Email Notification
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 465
+        secure: true
+        username: ${{secrets.SMTP_USERNAME}}
+        password: ${{secrets.SMTP_PASSWORD}}
+        subject: "MLOps IMDB - Statut du Pipeline"
+        to: mboupdajoyce@gmail.com, ornellaf50@gmail.com, hamadrassem@gmail.com
+        from: GitHub Actions MLOps
+        body: |
+          Rapport automatique du projet IMDB.
+          Statut des tests : ${{ steps.run_tests.outcome }}
+          Vérifiez les logs sur GitHub pour le détail.
+
+    - name: Deploy to Hugging Face
+      if: github.ref == 'refs/heads/main' && success()
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        git remote add hf https://user:$HF_TOKEN@huggingface.co/spaces/MBOUPDA/IMDB_Sentiment_Analysis
+        git push -f hf main
