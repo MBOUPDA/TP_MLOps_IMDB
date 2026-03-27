@@ -93,5 +93,5 @@ jobs:
         git config --global user.email "bot@mlops.com"
         git config --global user.name "MLOps Bot"
         # Ajout du remote Hugging Face et Push forcé vers le Space
-        git remote add hf https://user:$HF_TOKEN@huggingface.co/spaces/MBOUPDA/IMDB_Sentiment_Analysis
+        git remote add hf https://user:$HF_TOKEN@huggingface.co/spaces/Joycemboupda/IMDB_Sentiment_Analysis
         git push -f hf main
