@@ -39,7 +39,7 @@ CINEMA_KEYWORDS = [
 try:
     model = tf.keras.models.load_model("best_feeling_classification_model.keras")
 except:
-    model = None
+    model = tf.keras.models.load_model("../models/best_feeling_classification_model.keras")
 
 def clean_text(text):
     text = str(text).lower()
