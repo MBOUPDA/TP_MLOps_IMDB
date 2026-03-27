@@ -15,7 +15,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         lfs: true
-        fetch-depth: 0 # Récupère tout l'historique pour éviter l'erreur "shallow update"
+        fetch-depth: 0
 
     - name: 🐍 Setup Python 3.10
       uses: actions/setup-python@v4
@@ -77,29 +77,29 @@ jobs:
       if: steps.run_tests.outcome != 'success'
       run: exit 1
 
-    - name: 🤗 Deploy to Hugging Face Spaces
+    - name: 🤗 Clean Deploy to Hugging Face Spaces
       if: github.ref == 'refs/heads/main' && success()
       env:
         HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
-        # Configuration Git
-        git config --global user.email "bot@mlops.com"
-        git config --global user.name "MLOps Bot"
+        # 1. Préparation du dossier de déploiement (on ne prend que le nécessaire)
+        mkdir deploy_folder
+        cp -r src models requirements.txt app.py deploy_folder/
+        cd deploy_folder
         
-        # 🛠️ ACTION CRUCIALE : On réinitialise le suivi LFS pour le modèle lourd
+        # 2. Initialisation d'un Git tout neuf (sans historique lourd pollué)
+        git init
+        git config user.email "bot@mlops.com"
+        git config user.name "MLOps Bot"
+        
+        # 3. Configuration LFS immédiate pour le modèle
         git lfs install
-        # On force Git à oublier l'ancienne version "non-LFS" du fichier
-        git rm --cached models/best_feeling_classification_model.keras || true
         git lfs track "models/*.keras"
         git add .gitattributes
-        git add models/best_feeling_classification_model.keras
+        git add .
         
-        # On crée un commit local temporaire pour valider le changement LFS
-        git commit -m "Chore: Force LFS pointer for Hugging Face deployment" || echo "No changes to commit"
+        # 4. Création du commit de production unique
+        git commit -m "Deployment: Clean MLOps production build"
         
-        # Nettoyage et ajout du remote Hugging Face
-        git remote rm hf || true 
-        git remote add hf https://user:$HF_TOKEN@huggingface.co/spaces/Joycemboupda/IMDB_Sentiment_Analysis
-        
-        # Push final forcé
-        git push -f hf main
+        # 5. Push forcé vers le Space (écrase l'historique sur Hugging Face)
+        git push -f https://user:$HF_TOKEN@huggingface.co/spaces/Joycemboupda/IMDB_Sentiment_Analysis main
