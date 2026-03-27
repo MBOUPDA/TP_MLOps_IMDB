@@ -82,24 +82,24 @@ jobs:
       env:
         HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
-        # 1. Préparation du dossier de déploiement (on ne prend que le nécessaire)
+        # 1. Préparation du dossier de déploiement (isolation totale)
         mkdir deploy_folder
         cp -r src models requirements.txt app.py deploy_folder/
         cd deploy_folder
         
-        # 2. Initialisation d'un Git tout neuf (sans historique lourd pollué)
-        git init
+        # 2. Initialisation d'un Git propre forcé sur la branche 'main'
+        git init -b main
         git config user.email "bot@mlops.com"
         git config user.name "MLOps Bot"
         
-        # 3. Configuration LFS immédiate pour le modèle
+        # 3. Configuration LFS immédiate pour les fichiers .keras
         git lfs install
         git lfs track "models/*.keras"
         git add .gitattributes
         git add .
         
-        # 4. Création du commit de production unique
+        # 4. Création du commit de production propre (sans historique pollué)
         git commit -m "Deployment: Clean MLOps production build"
         
-        # 5. Push forcé vers le Space (écrase l'historique sur Hugging Face)
+        # 5. Push forcé vers Hugging Face (écrase l'historique distant pour résoudre le bug LFS)
         git push -f https://user:$HF_TOKEN@huggingface.co/spaces/Joycemboupda/IMDB_Sentiment_Analysis main
